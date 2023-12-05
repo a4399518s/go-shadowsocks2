@@ -1,3 +1,6 @@
 FROM registry.cn-shanghai.aliyuncs.com/fengzhihao/ubuntu:20.04
 
-# docker build -f "Dockerfile.build" -t go-shadowsocks2:$(date +%Y%m%d_%H%M%S) .
+# t=$(date +%Y%m%d_%H%M%S)
+# docker build -f "Dockerfile.build" -t go-shadowsocks2:$t .
+
+# docker run -it -v /data/project/go/go-shadowsocks2:/usr/local/project/src/go-shadowsocks2 --rm go-shadowsocks2:$t /bin/bash
