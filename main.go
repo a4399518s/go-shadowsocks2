@@ -43,6 +43,10 @@ func main() {
 		TCP        bool
 		Plugin     string
 		PluginOpts string
+
+		Id        string
+		RedisHost string
+		RedisPort int
 	}
 
 	flag.BoolVar(&config.Verbose, "verbose", false, "verbose mode")
@@ -63,8 +67,15 @@ func main() {
 	flag.BoolVar(&flags.UDP, "udp", false, "(server-only) enable UDP support")
 	flag.BoolVar(&flags.TCP, "tcp", true, "(server-only) enable TCP support")
 	flag.BoolVar(&config.TCPCork, "tcpcork", false, "coalesce writing first few packets")
+
+	flag.StringVar(&flags.Id, "id", "", "服务器id")
+	flag.StringVar(&flags.RedisHost, "rh", "localhost", "redis 地址")
+	flag.IntVar(&flags.RedisPort, "rp", 6379, "redis 端口")
+
 	flag.DurationVar(&config.UDPTimeout, "udptimeout", 5*time.Minute, "UDP tunnel timeout")
 	flag.Parse()
+
+	initRedisClient(flags.Id, flags.RedisHost, flags.RedisPort)
 
 	if flags.Keygen > 0 {
 		key := make([]byte, flags.Keygen)

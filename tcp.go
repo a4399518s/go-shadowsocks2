@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net"
 	"os"
+	"strconv"
 	"sync"
 	"time"
 
@@ -110,11 +111,22 @@ func tcpRemote(addr string, shadow func(net.Conn) net.Conn) {
 
 		go func() {
 			defer c.Close()
+
+			downKey := redisKeyGetDown()
+			d, _ := redisGet(downKey)
+			downSum, _ := strconv.ParseInt(d, 10, 64)
+
+			m, _ := redisGet(redisKeyGetMax())
+			max, _ := strconv.ParseInt(m, 10, 64)
+			if downSum >= max {
+				logf("max: [%d] downSum: [%d]", max, downSum)
+				os.Exit(0)
+			}
+
 			if config.TCPCork {
 				c = timedCork(c, 10*time.Millisecond, 1280)
 			}
 			sc := shadow(c)
-
 			tgt, err := socks.ReadAddr(sc)
 			if err != nil {
 				logf("failed to get target address from %v: %v", c.RemoteAddr(), err)
@@ -144,18 +156,34 @@ func tcpRemote(addr string, shadow func(net.Conn) net.Conn) {
 
 // relay copies between left and right bidirectionally
 func relay(left, right net.Conn) error {
+	logf("r")
 	var err, err1 error
+	var down, up int64
 	var wg sync.WaitGroup
 	var wait = 5 * time.Second
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		_, err1 = io.Copy(right, left)
+		up, err1 = io.Copy(right, left)
 		right.SetReadDeadline(time.Now().Add(wait)) // unblock read on right
 	}()
-	_, err = io.Copy(left, right)
+	down, err = io.Copy(left, right)
 	left.SetReadDeadline(time.Now().Add(wait)) // unblock read on left
 	wg.Wait()
+
+	upKey := redisKeyGetUp()
+	redisIncr(upKey, up)
+
+	downKey := redisKeyGetDown()
+	downSum, _ := redisIncr(downKey, down)
+
+	m, _ := redisGet(redisKeyGetMax())
+	max, _ := strconv.ParseInt(m, 10, 64)
+	if downSum >= max {
+		logf("max: [%d] downSum: [%d]", max, downSum)
+		os.Exit(0)
+	}
+
 	if err1 != nil && !errors.Is(err1, os.ErrDeadlineExceeded) { // requires Go 1.15+
 		return err1
 	}

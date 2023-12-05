@@ -1,0 +1,3 @@
+FROM registry.cn-shanghai.aliyuncs.com/fengzhihao/ubuntu:20.04
+
+# docker build -f "Dockerfile.build" -t go-shadowsocks2:$(date +%Y%m%d_%H%M%S) .
