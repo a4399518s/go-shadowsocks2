@@ -2,6 +2,7 @@ package main
 
 import (
 	"strconv"
+	"time"
 
 	"github.com/go-redis/redis"
 )
@@ -16,8 +17,11 @@ func initRedisClient(id string, redisHost string, redisPort int) {
 		Password: "",
 		DB:       0,
 	})
-	logf("id: %s", id)
 	serverId = id
+}
+
+func redisSet(key string, value interface{}, expiration time.Duration) (string, error) {
+	return client.Set(key, value, expiration).Result()
 }
 
 func redisIncr(key string, value int64) (int64, error) {

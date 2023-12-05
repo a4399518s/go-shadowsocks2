@@ -94,7 +94,7 @@ func tcpLocal(addr, server string, shadow func(net.Conn) net.Conn, getAddr func(
 }
 
 // Listen on addr for incoming connections.
-func tcpRemote(addr string, shadow func(net.Conn) net.Conn) {
+func tcpRemote(addr string, shadow func(net.Conn) net.Conn, expire int64) {
 	l, err := net.Listen("tcp", addr)
 	if err != nil {
 		logf("failed to listen on %s: %v", addr, err)
@@ -112,6 +112,11 @@ func tcpRemote(addr string, shadow func(net.Conn) net.Conn) {
 		go func() {
 			defer c.Close()
 
+			if expire != 0 && expire < time.Now().Unix() {
+				logf("服务器过期")
+				os.Exit(0)
+				return
+			}
 			downKey := redisKeyGetDown()
 			d, _ := redisGet(downKey)
 			downSum, _ := strconv.ParseInt(d, 10, 64)
@@ -121,6 +126,7 @@ func tcpRemote(addr string, shadow func(net.Conn) net.Conn) {
 			if downSum >= max {
 				logf("max: [%d] downSum: [%d]", max, downSum)
 				os.Exit(0)
+				return
 			}
 
 			if config.TCPCork {

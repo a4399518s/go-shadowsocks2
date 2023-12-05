@@ -47,6 +47,7 @@ func main() {
 		Id        string
 		RedisHost string
 		RedisPort int
+		expire    int64
 	}
 
 	flag.BoolVar(&config.Verbose, "verbose", false, "verbose mode")
@@ -71,11 +72,22 @@ func main() {
 	flag.StringVar(&flags.Id, "id", "", "服务器id")
 	flag.StringVar(&flags.RedisHost, "rh", "localhost", "redis 地址")
 	flag.IntVar(&flags.RedisPort, "rp", 6379, "redis 端口")
+	flag.Int64Var(&flags.expire, "e", 0, "过期时间")
 
 	flag.DurationVar(&config.UDPTimeout, "udptimeout", 5*time.Minute, "UDP tunnel timeout")
 	flag.Parse()
 
+	var ex = "无"
+	if flags.expire != 0 {
+		datetime := time.Unix(flags.expire, 0)
+		ex = datetime.Format("2006-01-02 15:04:05")
+	}
+	logf("server id: %s; 过期时间: %s", flags.Id,ex)
+
 	initRedisClient(flags.Id, flags.RedisHost, flags.RedisPort)
+	redisSet(flags.Id+"", "success", 1*time.Second)
+	res, _ := redisGet(flags.Id + "")
+	logf("redis connection: %s", res)
 
 	if flags.Keygen > 0 {
 		key := make([]byte, flags.Keygen)
@@ -193,7 +205,7 @@ func main() {
 			go udpRemote(udpAddr, ciph.PacketConn)
 		}
 		if flags.TCP {
-			go tcpRemote(addr, ciph.StreamConn)
+			go tcpRemote(addr, ciph.StreamConn,flags.expire)
 		}
 	}
 
