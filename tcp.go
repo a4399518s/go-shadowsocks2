@@ -183,7 +183,7 @@ func relay(left, right net.Conn) error {
 	downKey := redisKeyGetDown()
 	downSum, _ := redisIncr(downKey, down)
 
-	m, _ := redisGet(redisKeyGetMax())
+	m, _ := redisGet(redisKeyGetMaxDown())
 	max, _ := strconv.ParseInt(m, 10, 64)
 	if downSum >= max {
 		logf("max: [%d] downSum: [%d]", max, downSum)
