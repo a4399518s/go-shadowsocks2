@@ -43,11 +43,11 @@ func redisKeyPid() string {
 	return "g:s:" + serverId + ":pid"
 }
 func redisKeyGetUp() string {
-	return "g:s:" + serverId + ":up"
+	return "g:s:" + serverId + ":use:up"
 }
 func redisKeyGetDown() string {
-	return "g:s:" + serverId + ":down"
+	return "g:s:" + serverId + ":use:down"
 }
-func redisKeyGetMax() string {
-	return "g:s:" + serverId + ":max"
+func redisKeyGetMaxDown() string {
+	return "g:s:" + serverId + ":max:down"
 }

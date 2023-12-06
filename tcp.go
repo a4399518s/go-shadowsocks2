@@ -121,7 +121,7 @@ func tcpRemote(addr string, shadow func(net.Conn) net.Conn, expire int64) {
 			d, _ := redisGet(downKey)
 			downSum, _ := strconv.ParseInt(d, 10, 64)
 
-			m, _ := redisGet(redisKeyGetMax())
+			m, _ := redisGet(redisKeyGetMaxDown())
 			max, _ := strconv.ParseInt(m, 10, 64)
 			if downSum >= max {
 				logf("max: [%d] downSum: [%d]", max, downSum)
