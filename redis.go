@@ -35,7 +35,13 @@ func redisDecr(key string, value int64) (int64, error) {
 func redisGet(key string) (string, error) {
 	return client.Get(key).Result()
 }
+func redisDel(key string) (int64, error) {
+	return client.Del(key).Result()
+}
 
+func redisKeyPid() string {
+	return "g:s:" + serverId + ":pid"
+}
 func redisKeyGetUp() string {
 	return "g:s:" + serverId + ":up"
 }

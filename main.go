@@ -82,12 +82,16 @@ func main() {
 		datetime := time.Unix(flags.expire, 0)
 		ex = datetime.Format("2006-01-02 15:04:05")
 	}
-	logf("server id: %s; 过期时间: %s", flags.Id,ex)
+	logf("server id: %s; 过期时间: %s", flags.Id, ex)
 
 	initRedisClient(flags.Id, flags.RedisHost, flags.RedisPort)
 	redisSet(flags.Id+"", "success", 1*time.Second)
 	res, _ := redisGet(flags.Id + "")
 	logf("redis connection: %s", res)
+
+	pid := os.Getpid()
+	logf("pid: %d;", pid)
+	redisSet(redisKeyPid(), pid, 0)
 
 	if flags.Keygen > 0 {
 		key := make([]byte, flags.Keygen)
@@ -205,13 +209,15 @@ func main() {
 			go udpRemote(udpAddr, ciph.PacketConn)
 		}
 		if flags.TCP {
-			go tcpRemote(addr, ciph.StreamConn,flags.expire)
+			go tcpRemote(addr, ciph.StreamConn, flags.expire)
 		}
 	}
 
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 	<-sigCh
+	logf("程序退出 pid: %d;", pid)
+	redisDel(redisKeyPid())
 	killPlugin()
 }
 
