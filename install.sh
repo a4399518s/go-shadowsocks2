@@ -5,8 +5,8 @@ id=$(hostname)
 region=$(echo $id | cut -d'-' -f1)
 
 curl --location '35.240.135.67:8080/server/add.php' \
---header 'Content-Type: application/json' \
---data "{
+ --header 'Content-Type: application/json' \
+ --data "{
     \"id\": \"$id\",
     \"ip\": \"$pip\",
     \"region\": \"$region\",
